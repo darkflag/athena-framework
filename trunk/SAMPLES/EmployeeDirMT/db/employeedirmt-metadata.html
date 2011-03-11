@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+
+body, table, tr, td {font-family: Arial, Helvetica, sans-serif; font-size: 12px;};
+h3 {display: inline;}
+table {
+	background-color: #fff;
+	border-spacing: 0px;
+	border: solid 1px #aaa;
+	border-collapse:collapse;
+	border-spacing: 0px;
+}
+
+td.entity {
+	padding-top: 10px;
+	padding-bottom: 4px;
+	background-color:#BED;
+}
+
+tr.even {
+	background-color: #fff;
+}
+
+tr.odd {
+	background-color: #f0f0f0;
+}
+
+tr.rowhover {
+	background-color:#FDA;
+}
+tr.rowhover td {
+
+	color: #000;
+}
+
+td {
+ color: #333;  border: 0;
+ padding-top:2px; padding-bottom:2px;
+ padding-left:6px; padding-right:6px;
+ border-width: 1px;
+ margin: 0;
+}
+
+td.warn {
+	background-color: #F33;
+	color: white;
+}
+
+th{
+ background-color:#e0e0e0;
+ color:#333;
+ font-size: 12px;
+ font-weight: normal;
+ font-style: italic;
+ padding-top:4px; padding-bottom:4px;
+ padding-left:6px; padding-right:6px;
+ text-align:left;
+ border-bottom: solid 1px #999;
+}
+
+span.code {
+	font-family: "Courier New", Courier, monospace;
+}
+
+</style>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script>
+   try {
+	$(document).ready(function() {
+	  //for table row
+	$("table tr").hover(
+	   function() {
+	    $(this).addClass("rowhover");
+	   },
+	   function() {
+	    $(this).removeClass("rowhover");
+	   }
+	 );
+
+	});
+  }catch(e) {
+  	// alert(e);
+  }
+</script>
+
+
+<title>Metadata Reference - Athena Framework</title>
+</head><body>
+<h2>Metadata Reference</h2>
+<table>
+<tr><th>ID</th><th>Entity system name</th><th>Table name</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr><td><a href='#Employee'>101</a></td><td><b>Employee</b></td><td>Data_Employee</td><td>Employee</td><td>null</td><td>null</td></tr>
+<tr><td><a href='#Org'>201</a></td><td><b>Org</b></td><td>Sys_Org</td><td>Org</td><td>Organization</td><td>null</td></tr>
+<tr><td><a href='#User'>202</a></td><td><b>User</b></td><td>Sys_User</td><td>User</td><td>null</td><td>null</td></tr>
+<tr><td colspan=6></td></tr><tr><td colspan=6 class='entity'><a name='Employee'/><h3>101 Employee </h3> (table: <b>Data_Employee</b>; package: com.test; attributes: 6; relationships: 0)
+<br><i>Display name:</i> Employee; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>employee_ID(PK)</td><td>INTEGER</td><td>Employee ID</td><td>Primary key</td><td>(PK for Employee)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>nameFull</td><td>VARCHAR(200)</td><td>Full name</td><td></td><td></td></tr>
+
+<tr class='odd'><td>5</td><td>bornYear</td><td>INTEGER</td><td>Born year</td><td></td><td></td></tr>
+<tr><td colspan=6 class='entity'><a name='Org'/><h3>201 Org </h3> (table: <b>Sys_Org</b>; package: com.sys; attributes: 4; relationships: 0)
+<br><i>Display name:</i> Org; <i>Description:</i> Organization; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>org_ID(PK)</td><td>INTEGER</td><td>Org ID</td><td>Primary key</td><td>(PK for Org)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>nameFull *</td><td>NVARCHAR(64)</td><td>Full name</td><td>Full name</td><td>Full name</td></tr>
+<tr><td colspan=6 class='entity'><a name='User'/><h3>202 User </h3> (table: <b>Sys_User</b>; package: com.sys; attributes: 6; relationships: 0)
+<br><i>Display name:</i> User; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>user_ID(PK)</td><td>INTEGER</td><td>User ID</td><td>Primary key</td><td>(PK for User)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>nameFull *</td><td>NVARCHAR(64)</td><td>Full name</td><td>Full name</td><td>Full name</td></tr>
+
+<tr class='odd'><td>5</td><td>password_</td><td>VARCHAR(32)</td><td>Password</td><td>Clear text password</td><td></td></tr>
+</table>
+<a href="http://www.athenaframework.org" target='_blank'>
+<img src="http://www.athenaframework.org/_img/logo/logo-poweredby.png" alt="Powered by Athena Framework" align="right" hspace="15" vspace="15" border="0">
+</a>
+
+</body></html>
