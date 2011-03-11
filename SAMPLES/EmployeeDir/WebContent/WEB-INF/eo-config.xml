@@ -9,12 +9,12 @@
 			<port>-1</port> <!-- '-1' means using the default port -->
 			<username>APP</username>
 			<password></password>
-			<db>&ABSOLUTE_PATH_TO_PROJECT\db\derby\employeedir</db>
+			<db>&ABSOLUTE_PATH_TO_PROJECT\db\derby_employeedir</db>
 			<max-active>10</max-active>
 			<max-idle>5</max-idle>
 			<max-wait>5000</max-wait>
 			<connection-timeout>300</connection-timeout>
 		</datasource>
 	</datasources>
-	<property name="java-source-local-dir" value="&ABSOLUTE_PATH_TO_PROJECT\src"/>
+	<property name="java-source-local-dir" value=""/>
 </eo-system>
