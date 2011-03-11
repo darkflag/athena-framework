@@ -17,7 +17,7 @@ A1. Config the database in WebContent/WEB-INF/eo-config.xml
      <host>localhost</host>
      <username>APP</username> 				<!-- must be APP -->
      <password></password> 					<!-- must be empty -->
-     <db>C:\EmployeeDir\db\derby</db>		<!-- absolute path -->
+     <db>C:\EmployeeDir\db\derby_employeedir</db>		<!-- absolute path -->
 	 <property name="java-source-local-dir" value="C:\EmployeeDir\src"/> <!-- absolute path -->
 
 B: Metadata Initialization - create tables to hold metadata
