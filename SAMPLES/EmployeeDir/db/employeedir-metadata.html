@@ -1,0 +1,195 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+
+body, table, tr, td {font-family: Arial, Helvetica, sans-serif; font-size: 12px;};
+h3 {display: inline;}
+table {
+	background-color: #fff;
+	border-spacing: 0px;
+	border: solid 1px #aaa;
+	border-collapse:collapse;
+	border-spacing: 0px;
+}
+
+td.entity {
+	padding-top: 10px;
+	padding-bottom: 4px;
+	background-color:#BED;
+}
+
+tr.even {
+	background-color: #fff;
+}
+
+tr.odd {
+	background-color: #f0f0f0;
+}
+
+tr.rowhover {
+	background-color:#FDA;
+}
+tr.rowhover td {
+
+	color: #000;
+}
+
+td {
+ color: #333;  border: 0;
+ padding-top:2px; padding-bottom:2px;
+ padding-left:6px; padding-right:6px;
+ border-width: 1px;
+ margin: 0;
+}
+
+td.warn {
+	background-color: #F33;
+	color: white;
+}
+
+th{
+ background-color:#e0e0e0;
+ color:#333;
+ font-size: 12px;
+ font-weight: normal;
+ font-style: italic;
+ padding-top:4px; padding-bottom:4px;
+ padding-left:6px; padding-right:6px;
+ text-align:left;
+ border-bottom: solid 1px #999;
+}
+
+span.code {
+	font-family: "Courier New", Courier, monospace;
+}
+
+</style>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script>
+   try {
+	$(document).ready(function() {
+	  //for table row
+	$("table tr").hover(
+	   function() {
+	    $(this).addClass("rowhover");
+	   },
+	   function() {
+	    $(this).removeClass("rowhover");
+	   }
+	 );
+
+	});
+  }catch(e) {
+  	// alert(e);
+  }
+</script>
+
+
+<title>Metadata Reference - Athena Framework</title>
+</head><body>
+<h2>Metadata Reference</h2>
+<table>
+<tr><th>ID</th><th>Entity system name</th><th>Table name</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr><td><a href='#Employee'>101</a></td><td><b>Employee</b></td><td>Data_Employee</td><td>Employee</td><td>null</td><td>null</td></tr>
+<tr><td><a href='#Address'>102</a></td><td><b>Address</b></td><td>Address</td><td>Address</td><td>null</td><td>null</td></tr>
+<tr><td><a href='#EmailAccount'>103</a></td><td><b>EmailAccount</b></td><td>EmailAccount</td><td>EmailAccount</td><td>null</td><td>null</td></tr>
+<tr><td><a href='#Project'>104</a></td><td><b>Project</b></td><td>Project</td><td>Project</td><td>null</td><td>null</td></tr>
+<tr><td><a href='#EmpProj'>105</a></td><td><b>EmpProj</b></td><td>EmpProj</td><td>EmpProj</td><td>null</td><td>null</td></tr>
+<tr><td colspan=6></td></tr><tr><td colspan=6 class='entity'><a name='Employee'/><h3>101 Employee </h3> (table: <b>Data_Employee</b>; package: com.test; attributes: 6; relationships: 3)
+<br><i>Display name:</i> Employee; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>employee_ID(PK)</td><td>INTEGER</td><td>Employee ID</td><td>Primary key</td><td>(PK for Employee)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>nameFull</td><td>VARCHAR(200)</td><td>Full name</td><td></td><td></td></tr>
+
+<tr class='odd'><td>5</td><td>bornYear</td><td>INTEGER</td><td>Born year</td><td></td><td></td></tr>
+<tr><td colspan=6><hr size=1></td></tr>
+<tr class='even'><td>[M]</td><td>addresses</td><td>Address</td><td>Addresses</td><td></td><td></td></tr>
+
+<tr class='odd'><td>[1]</td><td>emailAcct</td><td>EmailAccount</td><td>Email account</td><td></td><td></td></tr>
+
+<tr class='even'><td>[M]</td><td>empProjs</td><td>EmpProj</td><td>Project association</td><td></td><td></td></tr>
+<tr><td colspan=6 class='entity'><a name='Address'/><h3>102 Address </h3> (table: <b>Address</b>; package: com.test; attributes: 6; relationships: 1)
+<br><i>Display name:</i> Address; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>address_ID(PK)</td><td>INTEGER</td><td>Address ID</td><td>Primary key</td><td>(PK for Address)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>address</td><td>NVARCHAR(200)</td><td>Address</td><td></td><td></td></tr>
+
+<tr class='odd'><td>5</td><td>employee_ID</td><td>INTEGER</td><td>Employee</td><td></td><td></td></tr>
+<tr><td colspan=6><hr size=1></td></tr>
+<tr class='even'><td>[1]</td><td>employee</td><td>Employee</td><td>Employee</td><td></td><td></td></tr>
+<tr><td colspan=6 class='entity'><a name='EmailAccount'/><h3>103 EmailAccount </h3> (table: <b>EmailAccount</b>; package: com.test; attributes: 6; relationships: 1)
+<br><i>Display name:</i> EmailAccount; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>emailAccount_ID(PK)</td><td>INTEGER</td><td>EmailAccount ID</td><td>Primary key</td><td>(PK for EmailAccount)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>address</td><td>VARCHAR(64)</td><td>Address</td><td></td><td></td></tr>
+
+<tr class='odd'><td>5</td><td>employee_ID</td><td>INTEGER</td><td>Employee</td><td></td><td></td></tr>
+<tr><td colspan=6><hr size=1></td></tr>
+<tr class='even'><td>[1]</td><td>employee</td><td>Employee</td><td>Employee</td><td></td><td></td></tr>
+<tr><td colspan=6 class='entity'><a name='Project'/><h3>104 Project </h3> (table: <b>Project</b>; package: com.test; attributes: 5; relationships: 1)
+<br><i>Display name:</i> Project; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>project_ID(PK)</td><td>INTEGER</td><td>Project ID</td><td>Primary key</td><td>(PK for Project)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>title</td><td>NVARCHAR(256)</td><td>Title</td><td></td><td></td></tr>
+<tr><td colspan=6><hr size=1></td></tr>
+<tr class='even'><td>[M]</td><td>empProjs</td><td>EmpProj</td><td>Employee association</td><td></td><td></td></tr>
+<tr><td colspan=6 class='entity'><a name='EmpProj'/><h3>105 EmpProj </h3> (table: <b>EmpProj</b>; package: com.test; attributes: 7; relationships: 2)
+<br><i>Display name:</i> EmpProj; <i>Description:</i> null; <i>Data definition:</i> null
+</td></tr><tr><th>SeqNo</th><th>System name</th><th>Datatype</th> <th>Display name</th><th>Description</th><th>Data definition</th> </tr>
+
+<tr class='even'><td>0</td><td>empProj_ID(PK)</td><td>INTEGER</td><td>EmpProj ID</td><td>Primary key</td><td>(PK for EmpProj)</td></tr>
+
+<tr class='odd'><td>1</td><td>version</td><td>INTEGER</td><td>Version</td><td>Version</td><td>each update increases one</td></tr>
+
+<tr class='even'><td>2</td><td>status</td><td>TINYINT</td><td>Status</td><td>EO status</td><td>Used for marking soft deletion</td></tr>
+
+<tr class='odd'><td>3</td><td>ORG_ID</td><td>INTEGER</td><td>Org ID</td><td>Organization</td><td>the org its belongs; multi-tenancy</td></tr>
+
+<tr class='even'><td>4</td><td>employee_ID</td><td>INTEGER</td><td>Emplyee</td><td></td><td></td></tr>
+
+<tr class='odd'><td>5</td><td>project_ID</td><td>INTEGER</td><td>Project</td><td></td><td></td></tr>
+
+<tr class='even'><td>6</td><td>role_</td><td>VARCHAR(64)</td><td>Role</td><td></td><td></td></tr>
+<tr><td colspan=6><hr size=1></td></tr>
+<tr class='even'><td>[1]</td><td>employee</td><td>Employee</td><td>Employee</td><td></td><td></td></tr>
+
+<tr class='odd'><td>[1]</td><td>project</td><td>Project</td><td>Project</td><td></td><td></td></tr>
+</table>
+<a href="http://www.athenaframework.org" target='_blank'>
+<img src="http://www.athenaframework.org/_img/logo/logo-poweredby.png" alt="Powered by Athena Framework" align="right" hspace="15" vspace="15" border="0">
+</a>
+
+</body></html>
