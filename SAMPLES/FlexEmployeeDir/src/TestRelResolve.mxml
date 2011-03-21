@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id$ Copyright (c) 2008-2011 Insprise Jack - Feb 22, 2011: Initial version -->
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" creationComplete="application1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.test.Department;
+			import com.test.Employee;
+
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+
+			import org.athenasource.framework.eo.core.EOService;
+			import org.athenasource.framework.eo.core.ioc.EOServiceLocator;
+			import org.athenasource.framework.eo.remoting.event.EventEOService;
+			import org.athenasource.framework.eo.remoting.event.EventRemoteOperationSuccess;
+
+			/** EO service */
+			var eoService:EOService;
+
+			/** Model: all departments */
+			[Bindable]
+			public var departments:ArrayCollection = new ArrayCollection();
+
+			protected function application1_creationCompleteHandler(event:FlexEvent):void {
+				// Initialize eoService
+				eoService = new EOService("http://localhost:8080/JavaEmployeeDir/messagebroker/amf", "eo", 2, true, onEoServiceEvent);
+				// Set Service Locator
+				EOServiceLocator.getInstance().eoService = eoService;
+			}
+
+			protected function onEoServiceEvent(event:EventEOService):void {
+				if(event.kind == EventEOService.KIND_LOGIN_SUCCESS) {
+					trace("Metadata loaded successfully.");
+					loadDepts();
+				}else if(event.kind == EventEOService.KIND_LOGIN_ERROR || event.kind == EventEOService.KIND_META_LOAD_ERROR) {
+					trace("Failed to load metadata: " + event.errorMessage);
+				}
+			}
+
+			/**
+			 * Load employees and departments.
+			 */
+			protected function loadDepts():void {
+				trace("Loading employees and departments ...");
+				eoService.invokeService("empService", "loadData", [], onLoadEmpAndDeptSuccess, null);
+
+				// reference:
+				Employee; Department;
+			}
+
+			protected function onLoadEmpAndDeptSuccess(e:EventRemoteOperationSuccess):void {
+				trace("Departments and employees loade successfully.");
+				var result:Array = e.data as Array;
+
+				var acEmpLoaded:ArrayCollection = result[0] as ArrayCollection;
+				var acDeptLoaded:ArrayCollection = result[1] as ArrayCollection;
+
+				departments = acDeptLoaded;
+			}
+
+		]]>
+	</fx:Script>
+	<mx:DataGrid x="10" y="37" id="gridDepts" dataProvider="{departments}" width="195" height="141">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Full name" dataField="nameFull"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:DataGrid x="252" y="36" id="gridEmps" dataProvider="{gridDepts.selectedItem.employees}" width="248" height="142">
+		<mx:columns>
+			<mx:DataGridColumn dataField="firstName"/>
+			<mx:DataGridColumn dataField="lastName"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<s:Label x="10" y="10" text="Departments" fontSize="20" width="302"/>
+	<s:Label x="252" y="16" text="Employees in selected department:"/>
+</s:Application>
