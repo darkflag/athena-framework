@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- All services are invoked in FlexRequest, going through BlazeDS -->
+<services version="1.0" xmlns="http://www.athenasource.org/schema/ieo-services"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.athenasource.org/schema/ieo-services http://athenasource.org/dist/schema/ieo-services.xsd">
+	<!-- Common services -->
+	<service name="meta" class="org.athenasource.framework.eo.web.service.MetadataService" description="provides metadata service for applications" />
+	<service name="commonEo" class="org.athenasource.framework.eo.web.service.CommonEoService" description="common eo services for applications" />
+
+	<!-- Application specific services -->
+	<service name="empService" class="EmpService" description="Employee Service" />
+</services>

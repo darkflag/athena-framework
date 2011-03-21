@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services-config>
+	<factories>
+		<factory id="eo-factory" class="org.athenasource.framework.flex.FactoryForBlazeDS" />
+	</factories>
+
+	<services>
+		<service id="remoting-service" class="flex.messaging.services.RemotingService">
+			<adapters>
+				<adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true" />
+			</adapters>
+			<default-channels>
+				<channel ref="eo-amf" />
+			</default-channels>
+			<destination id="eo">
+				<properties>
+					<factory>eo-factory</factory>
+				</properties>
+			</destination>
+		</service>
+		<!-- Other services goes here ... -->
+	</services>
+
+	<security>
+		<login-command class="flex.messaging.security.TomcatLoginCommand" server="Tomcat" />
+		<!-- Uncomment the correct app server
+			<login-command class="flex.messaging.security.TomcatLoginCommand" server="JBoss">
+			<login-command class="flex.messaging.security.JRunLoginCommand" server="JRun"/>
+			<login-command class="flex.messaging.security.WeblogicLoginCommand" server="Weblogic"/>
+			<login-command class="flex.messaging.security.WebSphereLoginCommand" server="WebSphere"/>
+		-->
+	</security>
+
+	<channels>
+		<channel-definition id="eo-amf" class="mx.messaging.channels.AMFChannel">
+			<endpoint url="/JavaEmployeeDir/messagebroker/amf" class="flex.messaging.endpoints.AMFEndpoint" />
+		</channel-definition>
+		<!-- Other services goes here ... -->
+	</channels>
+
+	<logging>
+		<!-- target class="flex.messaging.log.ConsoleTarget" level="INFO" --> <!--  must be INFO or above, never ALL or DEBUG. -->
+		<target class="org.athenasource.framework.flex.Log4JTargetForBlazeDS" level="INFO"> <!--  must be INFO or above, never ALL or DEBUG. -->
+			<properties>
+				<prefix>BlazeDS.</prefix>
+				<includeDate>false</includeDate>
+				<includeTime>false</includeTime>
+				<includeLevel>false</includeLevel>
+				<includeCategory>true</includeCategory>
+			</properties>
+			<filters>
+				<pattern>Client.*</pattern>
+				<pattern>Endpoint.*</pattern>
+				<pattern>Message.*</pattern>
+				<pattern>Protocol.*</pattern>
+				<pattern>Service.*</pattern>
+				<pattern>Startup.*</pattern>
+				<pattern>Configuration</pattern>
+				<pattern>Resource</pattern>
+				<pattern>Timeout</pattern>
+			</filters>
+		</target>
+	</logging>
+
+	<system>
+		<redeploy>
+			<enabled>false</enabled>
+		</redeploy>
+	</system>
+
+</services-config>
