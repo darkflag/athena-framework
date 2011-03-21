@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eo-system deletion-policy="hard" multitenancy="false" xmlns="http://www.athenasource.org/schema/ieo-config"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.athenasource.org/schema/ieo-config http://www.athenasource.org/dist/schema/ieo-config.xsd">
+	<datasources default="default">
+		<datasource name="default">
+			<database-type></database-type>
+			<host>localhost</host>
+			<port>-1</port>
+			<username></username>
+			<password></password>
+			<db></db>
+			<max-active>10</max-active>
+			<max-idle>5</max-idle>
+			<max-wait>5000</max-wait>
+			<connection-timeout>300</connection-timeout>
+		</datasource>
+	</datasources>
+	<services-declaration>webapp:/WEB-INF/eo-services.xml</services-declaration>
+	<property name="java-source-local-dir" value=""/>
+	<property name="flex-source-local-dir" value=""/>
+</eo-system>
