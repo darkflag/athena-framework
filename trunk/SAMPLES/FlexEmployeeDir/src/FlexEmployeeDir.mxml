@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id$ Copyright (c) 2011 athenaframework.org -->
+<mx:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				layout="absolute"  creationComplete="onCreationComplete(event)"
+				currentStateChange="onCurrentStateChange(event)"
+				creationPolicy="all"
+				currentState="StateEmployeesList"  width="630" height="625">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+
+		mx|DataGrid {
+			headerStyleName: myHeaderStyles;
+		}
+		.myHeaderStyles {
+			color: blue;
+			fontWeight: bold;
+		}
+	</fx:Style>
+
+	<fx:Script>
+		<![CDATA[
+			import com.test.Department;
+			import com.test.Employee;
+			import com.test.generated.Department_EO;
+			import com.test.generated.Employee_EO;
+
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.events.StateChangeEvent;
+			import mx.managers.CursorManager;
+			import mx.resources.IResourceManager;
+			import mx.resources.ResourceManager;
+			import mx.rpc.remoting.RemoteObject;
+			import mx.utils.ArrayUtil;
+
+			import org.athenasource.framework.eo.core.EOService;
+			import org.athenasource.framework.eo.core.ToMany;
+			import org.athenasource.framework.eo.core.UnitOfWork;
+			import org.athenasource.framework.eo.core.baseclass.Listener;
+			import org.athenasource.framework.eo.core.events.EventRelationshipObject;
+			import org.athenasource.framework.eo.core.ioc.CommandLoadPicklist;
+			import org.athenasource.framework.eo.core.ioc.EOServiceLocator;
+			import org.athenasource.framework.eo.core.ioc.RelationshipResolver;
+			import org.athenasource.framework.eo.remoting.CommandLoadMetaDomain;
+			import org.athenasource.framework.eo.remoting.CommandService;
+			import org.athenasource.framework.eo.remoting.event.EventEOService;
+			import org.athenasource.framework.eo.remoting.event.EventRemoteOperationError;
+			import org.athenasource.framework.eo.remoting.event.EventRemoteOperationSuccess;
+			import org.athenasource.framework.eo.uiutil.ControlFactoryForEO;
+
+			/** Service Names */
+			protected static const SVC_ATD:String = "empService"; // The Remote Service Class Name, set in eo-services.xml(Java)
+			protected static const SVC_ATD_LOAD_DATA:String = "loadData";
+			protected static const SVC_ATD_LOAD_EMP_FULL:String = "loadFullEmpObject";
+			protected static const SVC_ATD_SAVE_EMP:String = "saveEmployee";
+			protected static const SVC_ATD_REMOVE_EMP:String = "removeEmployee";
+
+			public static const RM:IResourceManager = ResourceManager.getInstance();
+
+			/** EOService */
+			protected var eoService:EOService;
+
+			/** Data  */
+			protected var arrayCollectionEmployees:ArrayCollection = new ArrayCollection(); // The employees
+			protected var arrayCollectionDepartments:ArrayCollection = new ArrayCollection(); // The departments
+
+			/**
+			 * Creation complete handler.
+			 * Initialize eoSerivce, load metadata, and update UI.
+			 */
+			protected function onCreationComplete(event:FlexEvent):void {
+				setInprogressAndRefreshActions(true);
+				// Initialize eoService
+				//eoService = new EOService("http://localhost:8920/AthenaTestDrive/messagebroker/amf", "eo", 2, true, onEoServiceEvent);
+				eoService = new EOService("http://localhost:8080/JavaEmployeeDir/messagebroker/amf", "eo", 2, true, onEoServiceEvent);
+				// Set Service Locator
+				EOServiceLocator.getInstance().eoService = eoService;
+
+				// Add status icon column.
+				dgEmployees.columns = Utils.insertToArray(dgEmployees.columns, ControlFactoryForEO.createDataGridColumnEOStateIcon());
+
+				// dgEmployees.dataProvider = arrayCollectionEmployees;
+				dgEmployees.addEventListener(ListEvent.CHANGE, onDGEmpListChanged);
+				dgEmployees.addEventListener(ListEvent.ITEM_DOUBLE_CLICK, onDgEmpDoubleClicked);
+
+				dgDepartments.addEventListener(ListEvent.CHANGE, onDgDeptListChanged);
+
+				comboEmpDepartment.dataProvider = arrayCollectionDepartments;
+				comboEmpDepartment.labelField = "nameFull";
+			}
+
+			/**
+			 * eoService Event handler - load employees and departments after the meta data loaded.
+			 */
+			protected function onEoServiceEvent(event:EventEOService):void {
+				if(event.kind == EventEOService.KIND_LOGIN_SUCCESS) {
+					loadEmpAndDept();
+					printLog("Metadata loaded successfully.");
+				}else if(event.kind == EventEOService.KIND_LOGIN_ERROR || event.kind == EventEOService.KIND_META_LOAD_ERROR) {
+					printLog("Error: " + event.errorMessage);
+					_roInprogress = true;
+				}
+			}
+
+			/** UnitOfWork. */
+			protected var uow:UnitOfWork = new UnitOfWork("myuow");
+
+			/**
+			 * Load employees and departments.
+			 */
+			protected function loadEmpAndDept():void {
+				printLog("Loading employees and departments ...");
+				eoService.invokeService(SVC_ATD, SVC_ATD_LOAD_DATA, [], onLoadEmpAndDeptSuccess, onRemoteOpError, uow);
+			}
+
+			/** On employees and departments load success */
+			protected function onLoadEmpAndDeptSuccess(e:EventRemoteOperationSuccess):void {
+				printLog("Departments and employees loade successfully.");
+				var result:Array = e.data as Array;
+
+				var acEmpLoaded:ArrayCollection = result[0] as ArrayCollection;
+				var acDeptLoaded:ArrayCollection = result[1] as ArrayCollection;
+
+				arrayCollectionEmployees.removeAll();
+				arrayCollectionDepartments.removeAll();
+
+				Utils.addAllElements(acEmpLoaded, arrayCollectionEmployees);
+				Utils.addAllElements(acDeptLoaded, arrayCollectionDepartments);
+
+				currentState = "StateEmployeesList";
+				setInprogressAndRefreshActions(false);
+			}
+
+			/** Save Employee. */
+			protected function saveEmployee(emp:Employee):void {
+				if(emp.partialObject) {
+					Alert.show("The employee hasn't loaded, wait a whild please.");
+					return;
+				}
+
+				_editingEmployee.firstName = textEmpFirstName.text;
+				_editingEmployee.lastName = textEmpLastName.text;
+				_editingEmployee.department = comboEmpDepartment.selectedItem as Department;
+				_editingEmployee.email = textEmail.text.length == 0 ? null : textEmail.text;
+				_editingEmployee.phone = textPhone.text;
+				_editingEmployee.resume = textResume.text;
+
+				if(_editingEmployee.isNew() && _editingEmployee.department != null && _editingEmployee.department.isRelationshipResolved(Department_EO.REL_employees)) {
+					_editingEmployee.department.addToEmployees(_editingEmployee);
+				}
+
+				if(_editingEmployee.isCommitted() && !_editingEmployee.hasChangesInOwningRelationshipObjects()) {
+					printLog("No change, no need to save: " + _editingEmployee.toStringOnDisplay);
+				}else {
+					printLog("Saving Employee: " + _editingEmployee.toStringOnDisplay);
+					setInprogressAndRefreshActions(true);
+					eoService.invokeService(SVC_ATD, SVC_ATD_SAVE_EMP, [emp], onSavedSuccess, onRemoteOpError, uow);
+				}
+			}
+
+			/** On employee saved success */
+			protected function onSavedSuccess(e:EventRemoteOperationSuccess):void {
+				var savedEmployee:Employee = e.data as Employee;
+				setInprogressAndRefreshActions(false);
+				printLog("Employee save successfully " +　savedEmployee.toStringOnDisplay);
+
+				if(!Utils.isIn(savedEmployee, arrayCollectionEmployees)) {
+					arrayCollectionEmployees.addItem(savedEmployee);
+				}
+
+				textInfo.text = "Employee saved: " + savedEmployee.toStringOnDisplay;
+
+				currentState = "StateEmployeesList";
+
+				dgEmployees.selectedItem = savedEmployee;
+				dgEmployees.verticalScrollPosition = dgEmployees.selectedIndex;
+				dgEmployees.validateNow();
+				onDGEmpListChanged(null);
+			}
+
+			/** Remove Employee. */
+			protected function removeEmployee(emp:Employee):void {
+				printLog("Remove employee: " + emp.toStringOnDisplay);
+				setInprogressAndRefreshActions(true);
+				eoService.invokeService(SVC_ATD, SVC_ATD_REMOVE_EMP, [_currentSelectedEmp], onRemoveSuccess, onRemoteOpError, uow);
+			}
+
+			/** On employee removed successfully. */
+			protected function onRemoveSuccess(e:EventRemoteOperationSuccess):void {
+				var removedEmployee:Employee = e.data as Employee;
+				printLog("Empolyee removed: " + removedEmployee.toStringOnDisplay);
+				textInfo.text = "Employee Removed: [" + removedEmployee.toStringOnDisplay + "]";
+				currentState = "StateEmployeesList";
+				Utils.removeFromArrayCollection(arrayCollectionEmployees, removedEmployee);
+				onDGEmpListChanged(null);
+				setInprogressAndRefreshActions(false);
+			}
+
+			/** All remote operations Error handler. */
+			protected function onRemoteOpError(e:EventRemoteOperationError):void {
+				setInprogressAndRefreshActions(false);
+				printLog("Remote error: " + e.message);
+			}
+
+			// ------------------------ UI ------------------------------
+			protected var _currentSelectedEmp:Employee; // current selected employee in datagrid employees.
+
+			/**
+			 * Handle ListChangeEvent dipatched by dgEmployees, set currentSelectedEmp and change buttons status.
+			 */
+			protected function onDGEmpListChanged(e:ListEvent):void {
+				_currentSelectedEmp = dgEmployees.selectedItem as Employee;
+				refreshButtons();
+			}
+
+			/** on datagrid of employees item double clicked, edit the employee. */
+			protected function onDgEmpDoubleClicked(e:ListEvent):void {
+				if(currentState == "StateEmployeesList" || currentState == "StateEmployeeDetail") {
+					editEmployee(_currentSelectedEmp);
+				}
+			}
+
+			/**
+			 * On datagrid of departments list changed, display the employees of the department.
+			 * If the ToMany relationship(department.employees) hasn't resolved, will resolve the relationship first.
+			 */
+			protected function onDgDeptListChanged(e:ListEvent):void {
+				var _currentDepartment:Department = dgDepartments.selectedItem as Department;
+
+				if(_currentDepartment != null) {
+					currentState = "StateDeptEmployees";
+					if(_currentDepartment.isRelationshipResolved(Department_EO.REL_employees)) { // Relationship has been resolved.
+						textInfo.text = "ToMany relationship alread resolved, Employees: " + _currentDepartment.employees.length;
+						printLog("ToMany relationship alread resolved, Employees: " + _currentDepartment.employees.length);
+					}else { // Relationship hasn't resolved, resolve now.
+						textInfo.text = "The tomany relationsihp of " + _currentDepartment.toStringOnDisplay + ": department.employees has't resolved, loading...";
+						printLog("The tomany relationsihp of department.employees has't resolved, loading...");
+						setInprogressAndRefreshActions(true);
+						_currentDepartment.addEventListenerEventRelationshipResolved(onDeptEmployeesResolved);
+					}
+					dgDeptEmployees.dataProvider = _currentDepartment.employees;
+				}else {
+					currentState = "StateDeptMgt";
+					dgDeptEmployees.dataProvider = null;
+				}
+			}
+
+			/** On the employees resolved, employees loaded successfully. */
+			protected function onDeptEmployeesResolved(e:EventRelationshipObject):void {
+				setInprogressAndRefreshActions(false);
+				textInfo.text = "ToMany relationship Employees resolved successfully, loaded employees : " + (e.relationshipObject as ToMany).targetObjects.length;
+				printLog("ToMany relationship Employees resolved successfully, loaded employees : " + (e.relationshipObject as ToMany).targetObjects.length);
+			}
+
+			/** Button click handler. */
+			protected function onButtonClick(event:MouseEvent):void {
+				try {
+					if(event.target == buttonSwitchToEmpMgt) { // Switch to employees list state.
+						currentState = "StateEmployeesList";
+						dgDepartments.selectedItem = null;
+					}else if(event.target == buttonNewEmployee) { // New employee
+						var newEmployee:Employee = Employee.createNewInstance();
+						editEmployee(newEmployee);
+					}else if(event.target == buttonReloadData) { // Reload employees and departments
+						loadEmpAndDept();
+					}else if(event.target == buttonEmpEdit) { // Edit employee
+						if(dgEmployees.selectedItem as Employee != null) {
+							editEmployee(_currentSelectedEmp);
+						}
+					}else if(event.target == buttonEmpSave) { // Save employee
+						saveEmployee(_editingEmployee);
+					}else if(event.target == buttonEmpCancel) { // Cancel editing
+						currentState = "StateEmployeesList";
+						onDGEmpListChanged(null);
+					}else if(event.target == buttonEmpDelete) { // Delete employee
+						if(dgEmployees.selectedItem as Employee != null) {
+							removeEmployee(_currentSelectedEmp);
+						}
+					}else if(event.target == buttonSwitchToDeptMgt) { // Switch to departments list state.
+						currentState = "StateDeptMgt";
+					}
+				}catch(e:Error) {
+					Alert.show(String(e.message), String(e.name));
+				}
+			}
+
+			protected var _editingEmployee:Employee; // current employee
+			/**
+			 * Try to edit the employee.
+			 * If the employee object is partial, will load full object first.
+			 */
+			protected function editEmployee(employee:Employee):void {
+				if(employee == null) {
+					return;
+				}
+
+				currentState = "StateEmployeeDetail";
+				_editingEmployee = employee;
+
+				textEmpFirstName.text = employee.firstName == null ? "" : employee.firstName;
+				textEmpLastName.text = employee.lastName == null ? "" : employee.lastName;
+				comboEmpDepartment.selectedItem = employee.department == null ? null : employee.department;
+				textEmail.text = employee.email;
+				textPhone.text = employee.phone;
+
+				if(employee.partialObject) {
+					loadFullEmployeeObj(employee);
+					textResume.text = "Loading...";
+					textInfo.text = "Loading partial object...";
+				}else {
+					printLog("Editing employee: " + _editingEmployee.toStringOnDisplay);
+					textInfo.text = "Viewing/Editing: " + employee.toStringOnDisplay;
+					textResume.text = employee.resume;
+				}
+
+				//				else if(emp.partialObject) {
+				//					loadFullEmployeeObj(emp); // Load full object.
+				//				}else {
+				//					doEditEmployee(emp); // Directly edit it.
+				//				}
+			}
+
+			/** Load full employee object. */
+			protected function loadFullEmployeeObj(empPartial:Employee):void {
+				printLog("The employee object is partial, loading the full object");
+				setInprogressAndRefreshActions(true);
+				eoService.invokeService(SVC_ATD, SVC_ATD_LOAD_EMP_FULL, [empPartial.id], onLoadEmpFullSuccess, onRemoteOpError, uow);
+			}
+
+			/** on load full employee object success. */
+			protected function onLoadEmpFullSuccess(e:EventRemoteOperationSuccess):void {
+				var employee:Employee = e.data as Employee;
+				setInprogressAndRefreshActions(false);
+				if(employee == null) {
+					return;
+				}
+				printLog("Employee full object load successfully: " + employee.toStringOnDisplay);
+				textInfo.text = "Employee full object loaded successfully";
+				editEmployee(employee); // Edit the employ now
+			}
+
+			//			/** Edit the employee. */
+			//			protected function doEditEmployee(employee:Employee):void {
+			//				currentState = "StateEmployeeDetail";
+			//				_editingEmployee = employee;
+			//				printLog("Editing employee: " + _editingEmployee.toStringOnDisplay);
+			//
+			//				textEmpFirstName.text = employee.firstName == null ? "" : employee.firstName;
+			//				textEmpLastName.text = employee.Name == null ? "" : employee.Name;
+			//				comboEmpDepartment.selectedItem = employee.department == null ? null : employee.department;
+			//				textEmpTitle.text = employee.title == null ? "" : employee.title;
+			//				textEmail.text = employee.email;
+			//				textPhone.text = employee.phone;
+			//				textResume.text = employee.resume;
+			//			}
+
+			/** On current state change event, update ui. */
+			protected function onCurrentStateChange(event:StateChangeEvent):void {
+				if(event.oldState != "StateEmployeeDetail" && currentState == "StateEmployeesList") {
+					textInfo.text = "Double click to edit";
+				}
+
+				if(currentState == "StateDeptMgt") {
+					textInfo.text = "Select and view the employees";
+				}
+
+				buttonSwitchToEmpMgt.enabled = currentState != "StateEmployeesList" && currentState != "StateEmployeeDetail";
+				buttonSwitchToDeptMgt.enabled = currentState != "StateDeptMgt" && currentState != "StateDeptEmployees";
+			}
+
+			/** Labal function for datagrid employess. */
+			public static function lableFunForDGEmployees(employee:Employee, column:DataGridColumn):String {
+				switch (column.dataField) {
+					case Employee_EO.REL_department:
+						return employee.department == null ? "N/A" : employee.department.nameFull;
+					default:
+						throw new Error("Unknown Column: " + column);
+				}
+			}
+
+			protected var _roInprogress:Boolean; // Remote opertaion inProgress, use to refresh button status.
+
+			/** Set Remote operation InProgress and refresh actions. */
+			protected function setInprogressAndRefreshActions(inprogress_:Boolean):void {
+				_roInprogress = inprogress_;
+				if(_roInprogress) {
+					CursorManager.setBusyCursor();
+				}else {
+					CursorManager.removeBusyCursor();
+				}
+				refreshButtons();
+			}
+
+			/** Refresh button status. */
+			protected function refreshButtons():void {
+				buttonSwitchToDeptMgt.enabled = !_roInprogress && (currentState == "StateEmployeesList" || currentState == "StateEmployeeDetail");
+				buttonSwitchToEmpMgt.enabled = !_roInprogress && (currentState == "StateDeptMgt" || currentState == "StateDeptEmployees");
+
+				buttonReloadData.enabled = !_roInprogress;
+				buttonNewEmployee.enabled = !_roInprogress;
+				buttonEmpEdit.enabled = _currentSelectedEmp != null && !_roInprogress;
+				buttonEmpDelete.enabled = _currentSelectedEmp != null && !_roInprogress;
+
+				if(buttonEmpSave != null) {
+					buttonEmpSave.enabled = !_roInprogress;
+				}
+			}
+
+			/** Print log */
+			protected function printLog(log:String, newLine:Boolean = true):void {
+				trace(log);
+				Utils.appendMessageAndScrollProperly(textLog, log, newLine);
+			}
+
+		]]>
+	</fx:Script>
+	<mx:states>
+		<mx:State name="StateEmployeesList"/>
+		<mx:State name="StateEmployeeDetail"/>
+		<s:State name="StateDeptMgt"/>
+		<s:State name="StateDeptEmployees"/>
+	</mx:states>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., seraddoes, value objects) here -->
+	</fx:Declarations>
+	<mx:DataGrid id="dgEmployees" dataProvider="{arrayCollectionEmployees}" includeIn="StateEmployeeDetail,StateEmployeesList" doubleClickEnabled="true" x="20" y="99" height="150" width="586">
+		<mx:columns>
+			<mx:DataGridColumn dataField="lastName" headerText="Last Name" width="80"/>
+			<mx:DataGridColumn dataField="firstName" headerText="First Name" width="80"/>
+			<mx:DataGridColumn headerText="Department" dataField="department" labelFunction="lableFunForDGEmployees" width="130"/>
+			<mx:DataGridColumn dataField="phone" headerText="Phone"/>
+			<mx:DataGridColumn dataField="email" headerText="Email"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<s:Button id="buttonReloadData" click="onButtonClick(event)" includeIn="StateEmployeeDetail,StateEmployeesList" label="Reload All" x="277.55" y="260.05" />
+	<s:Button id="buttonEmpEdit" click="onButtonClick(event)" label="View &amp; Edit" enabled="true" includeIn="StateEmployeeDetail,StateEmployeesList" x="441.15" y="260.05" />
+	<s:Button id="buttonEmpDelete" click="onButtonClick(event)" label="Delete" includeIn="StateEmployeeDetail,StateEmployeesList" x="535.95" y="260.3"/>
+	<mx:Text id="textInfo" color="#32607E" x="19.9" y="261.05"/>
+	<mx:Form includeIn="StateEmployeeDetail" x="20.8" y="289" width="298">
+		<mx:FormItem label="First name *">
+			<mx:TextInput id="textEmpFirstName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Last Name *">
+			<mx:TextInput id="textEmpLastName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Department">
+			<mx:ComboBox editable="false" id="comboEmpDepartment"  includeIn="StateEmployeeDetail" itemCreationPolicy="immediate"></mx:ComboBox>
+		</mx:FormItem>
+		<mx:FormItem label="Title">
+			<mx:TextInput id="textEmpTitle"/>
+		</mx:FormItem>
+		<mx:FormItem label="Email">
+			<mx:TextInput id="textEmail" />
+		</mx:FormItem>
+		<mx:FormItem label="Phone">
+			<mx:TextInput id="textPhone" />
+		</mx:FormItem>
+	</mx:Form>
+	<mx:Form includeIn="StateEmployeeDetail" x="343.8" y="289" width="262" height="157">
+		<mx:FormItem label="Resume" width="100%" height="100%">
+			<s:TextArea width="100%" height="100%" id="textResume"/>
+		</mx:FormItem>
+	</mx:Form>
+	<mx:Button includeIn="StateEmployeeDetail" x="458.75" y="454.15" label="Save" id="buttonEmpSave" click="onButtonClick(event)"/>
+	<s:Button includeIn="StateEmployeeDetail" x="536.2" y="454.7" label="Cancel" id="buttonEmpCancel" click="onButtonClick(event)"/>
+	<s:Button label="Employees" id="buttonSwitchToEmpMgt" click="onButtonClick(event)" x="20" y="62" />
+	<s:Button label="Departments" id="buttonSwitchToDeptMgt" click="onButtonClick(event)" x="116" y="62" />
+	<mx:DataGrid includeIn="StateDeptEmployees,StateDeptMgt" id="dgDepartments" dataProvider="{arrayCollectionDepartments}" itemCreationPolicy="immediate" x="24" y="103" width="412" height="150">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Name" dataField="nameFull"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<s:Button includeIn="StateEmployeeDetail,StateEmployeesList" label="New" id="buttonNewEmployee" click="onButtonClick(event)" x="360.85" y="260.05" />
+	<mx:DataGrid x="24" y="304.15" width="412" id="dgDeptEmployees" includeIn="StateDeptEmployees" height="150">
+		<mx:columns>
+			<mx:DataGridColumn headerText="First Name" dataField="firstName"/>
+			<mx:DataGridColumn headerText="Name" dataField="lastName"/>
+			<mx:DataGridColumn headerText="Phone" dataField="phone"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:TextArea left="10" bottom="10" right="10" id="textLog" color="#6F6666" height="100" borderAlpha="0.6" left.StateEmployeeDetail="10" bottom.StateEmployeeDetail="10" right.StateEmployeeDetail="10"/>
+	<s:Label x="20" y="19" text="Employee Directory" fontSize="26" fontWeight="normal" fontFamily="Arial" />
+</mx:Application>
